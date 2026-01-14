@@ -1,0 +1,27 @@
+PROMPT="%B[%m:%n] %24<..<%~ %#%b "
+RPROMPT="%B%w %T%b"
+ 
+export EDITOR="vim"
+bindkey -e
+
+export HISTSIZE=1000000
+export SAVEHIST=1000000
+
+set -o APPEND_HISTORY
+set -o EXTENDED_HISTORY
+set -o HIST_IGNORE_DUPS
+set -o HIST_SAVE_NO_DUPS
+set -o INC_APPEND_HISTORY_TIME
+set -o EXTENDED_GLOB
+set -o AUTO_MENU
+set -o AUTO_LIST
+set -o AUTO_PARAM_SLASH
+set -o CORRECT
+set -o LIST_TYPES
+set -o NO_PROMPT_CR
+
+alias ls="ls -F"
+alias cd..="cd .."
+
+eval "$(starship init zsh)"
+

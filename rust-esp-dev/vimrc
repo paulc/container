@@ -1,0 +1,146 @@
+set     nocompatible
+set     nomodeline
+set     hidden
+
+set     bs=2
+set     ai
+set     tabstop=4
+set     shiftwidth=4
+set     expandtab
+set     smarttab
+set     winminheight=0
+
+if !isdirectory("~/.vim_backup")
+    silent !mkdir ~/.vim_backup >/dev/null 2>&1
+endif
+
+set     backup
+set     backupdir=~/.vim_backup,.
+
+set     history=200
+set     ruler
+set     title
+set     laststatus=2
+set     ignorecase
+set     smartcase
+set     wildmenu
+set     wildmode=list:longest
+set     scrolloff=5
+set     backspace=indent,eol,start
+set     showbreak=...
+set     showmatch
+set     cryptmethod=blowfish2
+
+set     incsearch
+set     hlsearch
+set     mouse=nv
+
+map     //      :noh<cr>
+nmap    <c-n>   :cn<CR>
+nmap    <c-p>   :cp<CR>
+
+if executable("rg")
+  set grepprg=rg\ --vimgrep\ --smart-case
+  set grepformat=%f:%l:%c:%m
+endif
+
+set     shell=/bin/zsh
+set     ttyfast
+
+let     mapleader = ","
+" runtime macros/matchit.vim
+
+" File Browser
+let     g:netrw_liststyle=3
+let     g:netrw_browse_split=4
+let     g:netrw_banner=0
+let     g:netrw_winsize = 25
+
+" Buffers
+nmap <leader>n :bnext<cr>
+nmap <leader>p :bprevious<cr>
+nmap <leader>b :buffers<CR>:buffer<Space>
+
+" Tabs
+nmap <leader>t :tabnew <bar> Vexplore<CR>
+nmap <tab><tab> :tabn<CR>
+nmap <s-tab><s-tab> :tabp<CR>
+
+if &t_Co > 2
+    set background=dark
+    colorscheme torte
+    syntax on
+endif
+
+hi TabLine ctermbg=blue ctermfg=grey guibg=green guifg=grey
+hi TabLineSel ctermbg=blue ctermfg=red guibg=green guifg=yellow
+hi TabLineFill ctermfg=blue guifg=green
+
+filetype    on
+filetype    plugin on
+filetype    indent on
+
+" ALE
+set completeopt=menu,menuone,preview,noselect,noinsert
+set omnifunc=ale#completion#OmniFunc
+set signcolumn=yes
+set number
+let g:ale_linters = { 'rust': ['analyzer'], 'go': ['gopls'], 'python': ['pylsp'], '*': [], }
+let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'] }
+let g:ale_hover_to_preview = 1
+let g:ale_floating_preview = 1 
+let g:ale_fix_on_save = v:true
+let g:ale_lint_on_save = v:true
+let g:ale_virtualtext_cursor = 'disabled'
+let g:ale_lint_on_text_changed = 'always'
+nmap <silent> <C-j> <Plug>(ale_previous_wrap)
+nmap <silent> <C-k> <Plug>(ale_next_wrap)
+nmap <leader>h :ALEHover<CR>
+nmap <leader>d :ALEGoToDefinition<CR>
+nmap <leader>r :ALEFindReferences<CR>
+nmap <leader>a :ALENextWrap<CR>:ALEDetail<CR>
+" let g:ale_completion_enabled = 1
+
+if has("autocmd")
+    autocmd BufRead,BufNewFile *.txt set tw=78
+    autocmd BufRead,BufNewFile *.sh set showbreak=""
+    augroup rust
+        au!
+        autocmd FileType rust let @p = 'oprintln!("{:?}",);hi'
+        autocmd FileType rust let @l = 'olog::info!("");hhi'
+        autocmd FileType rust let @d = 'odefmt::info!("");hhi'
+        autocmd FileType rust let g:rustfmt_autosave = 1
+    augroup END
+    augroup deno
+        au!
+        autocmd FileType javascript,javascriptreact,typescript,typescriptreact set tabstop=2
+        autocmd FileType javascript,javascriptreact,typescript,typescriptreact set shiftwidth=2
+        nmap <leader>F :1,$!deno fmt -<CR>
+    augroup END
+    augroup go
+        au!
+        autocmd FileType go set autowrite
+        autocmd FileType go let g:go_fmt_command = "goimports"
+        autocmd FileType go set signcolumn=yes
+        autocmd FileType go set number
+    augroup END
+    augroup make
+        au!
+        autocmd FileType make set noexpandtab
+    augroup END
+    augroup cprog
+        au!
+        autocmd FileType c,cpp  set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
+    augroup END
+    augroup html
+        au!
+        autocmd FileType html set tabstop=2
+        autocmd FileType html set shiftwidth=2
+    augroup END
+    augroup autoquickfix
+        autocmd!
+        autocmd QuickFixCmdPost [^l]* cwindow
+        autocmd QuickFixCmdPost    l* lwindow
+    augroup END
+endif
+
