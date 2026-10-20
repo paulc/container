@@ -42,7 +42,7 @@ WORKDIR /home/paulc
 COPY --chown=paulc:users zshrc .zshrc
 COPY --chown=paulc:users vimrc .vimrc
 COPY --chown=paulc:users starship.toml .config/starship.toml
-COPY --chown=paulc:users gen_deploy_key.sh gen_deploy_key.sh 
+COPY --chown=paulc:users --chmod=755 gen_deploy_key.sh gen_deploy_key.sh 
 
 ENV CARGO_HOME="/home/paulc/.cargo" \
     RUSTUP_HOME="/home/paulc/.rustup" \
@@ -57,6 +57,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN curl -LsSf https://deno.land/install.sh | sh
 
 RUN ssh-keygen -t rsa -b 4096 -C "paulc@" -N "" -f ~/.ssh/id_rsa
+RUN git config --global init.defaultBranch main
 RUN git config --global user.name "pc" && git config --global user.email "pc@"
 
 RUN git clone --depth=1 https://github.com/rust-lang/rust.vim ~/.vim/pack/plugins/start/rust.vim
