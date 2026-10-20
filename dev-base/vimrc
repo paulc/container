@@ -2,7 +2,6 @@ set     nocompatible
 set     nomodeline
 set     hidden
 
-set     bs=2
 set     ai
 set     tabstop=4
 set     shiftwidth=4
@@ -10,12 +9,19 @@ set     expandtab
 set     smarttab
 set     winminheight=0
 
-if !isdirectory("~/.vim_backup")
-    silent !mkdir ~/.vim_backup >/dev/null 2>&1
+let s:backupdir = expand('~/.vim_backup')
+if !isdirectory(s:backupdir)
+    call mkdir(s:backupdir, 'p', 0700)
+endif
+
+let s:directory = expand('~/.vim_backup/swap')
+if !isdirectory(s:directory)
+    call mkdir(s:directory, 'p', 0700)
 endif
 
 set     backup
-set     backupdir=~/.vim_backup,.
+set     backupdir=~/.vim_backup//
+set     directory=~/.vim_backup/swap//
 
 set     history=200
 set     ruler
@@ -36,15 +42,15 @@ set     hlsearch
 set     mouse=nv
 
 map     //      :noh<cr>
-nmap    <c-n>   :cn<CR>
-nmap    <c-p>   :cp<CR>
+nnoremap    <c-n>   :cn<CR>
+nnoremap    <c-p>   :cp<CR>
 
 if executable("rg")
   set grepprg=rg\ --vimgrep\ --smart-case
   set grepformat=%f:%l:%c:%m
 endif
 
-set     shell=/bin/zsh
+set     shell=/bin/sh
 set     ttyfast
 
 let     mapleader = ","
@@ -57,24 +63,22 @@ let     g:netrw_banner=0
 let     g:netrw_winsize = 25
 
 " Buffers
-nmap <leader>n :bnext<cr>
-nmap <leader>p :bprevious<cr>
-nmap <leader>b :buffers<CR>:buffer<Space>
+nnoremap <leader>n :bnext<cr>
+nnoremap <leader>p :bprevious<cr>
+nnoremap <leader>b :buffers<CR>:buffer<Space>
 
 " Tabs
-nmap <leader>t :tabnew <bar> Vexplore<CR>
-nmap <tab><tab> :tabn<CR>
-nmap <s-tab><s-tab> :tabp<CR>
+nnoremap <leader>t :tabnew <bar> Vexplore<CR>
 
 if &t_Co > 2
     set background=dark
     colorscheme torte
-    syntax on
+    syntax enable
 endif
 
-hi TabLine ctermbg=blue ctermfg=grey guibg=green guifg=grey
-hi TabLineSel ctermbg=blue ctermfg=red guibg=green guifg=yellow
-hi TabLineFill ctermfg=blue guifg=green
+" hi TabLine ctermbg=blue ctermfg=grey guibg=green guifg=grey
+" hi TabLineSel ctermbg=blue ctermfg=red guibg=green guifg=yellow
+" hi TabLineFill ctermfg=blue guifg=green
 
 filetype    on
 filetype    plugin on
@@ -85,25 +89,56 @@ set completeopt=menu,menuone,preview,noselect,noinsert
 set omnifunc=ale#completion#OmniFunc
 set signcolumn=yes
 set number
-let g:ale_linters = { 'rust': ['analyzer'], 'go': ['gopls'], 'python': ['pylsp'], '*': [], }
-let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'] }
+let g:ale_linters = { 'rust': ['analyzer'], 'go': ['gopls'], 'python': ['pylsp'] }
+let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'], 'typescript': ['deno'], 'typescriptreact': ['deno'], 'javascript': ['deno'], 'javascriptreact': ['deno'], 'go': ['goimports'], }
 let g:ale_hover_to_preview = 1
-let g:ale_floating_preview = 1 
-let g:ale_fix_on_save = v:true
-let g:ale_lint_on_save = v:true
+let g:ale_floating_preview = 1
+let g:ale_fix_on_save = 1
 let g:ale_virtualtext_cursor = 'disabled'
-let g:ale_lint_on_text_changed = 'always'
-nmap <silent> <C-j> <Plug>(ale_previous_wrap)
-nmap <silent> <C-k> <Plug>(ale_next_wrap)
-nmap <leader>h :ALEHover<CR>
-nmap <leader>d :ALEGoToDefinition<CR>
-nmap <leader>r :ALEFindReferences<CR>
-nmap <leader>a :ALENextWrap<CR>:ALEDetail<CR>
+let g:ale_lint_on_text_changed = 'normal'
+let g:ale_rust_analyzer_config = { 'rust-analyzer': { 'cargo': {'targetDir': v:true}, 'check': {'allTargets': v:false}, }, }
 " let g:ale_completion_enabled = 1
 
+nmap <silent> <C-k> <Plug>(ale_previous_wrap)
+nmap <silent> <C-j> <Plug>(ale_next_wrap)
+nnoremap <leader>h :ALEHover<CR>
+nnoremap <leader>d :ALEGoToDefinition<CR>
+nnoremap <leader>r :ALEFindReferences<CR>
+nnoremap <leader>a :ALENextWrap<CR>:ALEDetail<CR>
+nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
+
+" Yank text from ALEHover popup
+function! YankPopupText() abort
+    if !has('popupwin')
+        echohl ErrorMsg | echo 'This Vim lacks +popupwin' | echohl NONE
+        return
+    endif
+
+    let l:ids = popup_list()
+    if empty(l:ids)
+        echohl WarningMsg | echo 'No popup open' | echohl NONE
+        return
+    endif
+
+    let l:buf = winbufnr(l:ids[0])
+    if l:buf == -1
+        echohl WarningMsg | echo 'Popup has no buffer' | echohl NONE
+        return
+    endif
+
+    let l:lines = getbufline(l:buf, 1, '$')
+    let @* = join(l:lines, "\n")
+    echo printf('Yanked %d line%s to *', len(l:lines), len(l:lines) == 1 ? '' : 's')
+endfunction
+
+nnoremap <silent> <leader>yp :call YankPopupText()<CR>
+
 if has("autocmd")
-    autocmd BufRead,BufNewFile *.txt set tw=78
-    autocmd BufRead,BufNewFile *.sh set showbreak=""
+    augroup text
+        au!
+        autocmd BufRead,BufNewFile *.txt setlocal tw=78
+        autocmd BufRead,BufNewFile *.sh setlocal showbreak=
+    augroup END
     augroup rust
         au!
         autocmd FileType rust let @p = 'oprintln!("{:?}",);hi'
@@ -113,29 +148,26 @@ if has("autocmd")
     augroup END
     augroup deno
         au!
-        autocmd FileType javascript,javascriptreact,typescript,typescriptreact set tabstop=2
-        autocmd FileType javascript,javascriptreact,typescript,typescriptreact set shiftwidth=2
-        nmap <leader>F :1,$!deno fmt -<CR>
+        autocmd FileType javascript,javascriptreact,typescript,typescriptreact setlocal tabstop=2
+        autocmd FileType javascript,javascriptreact,typescript,typescriptreact setlocal shiftwidth=2
     augroup END
     augroup go
         au!
-        autocmd FileType go set autowrite
+        autocmd FileType go setlocal autowrite
         autocmd FileType go let g:go_fmt_command = "goimports"
-        autocmd FileType go set signcolumn=yes
-        autocmd FileType go set number
     augroup END
     augroup make
         au!
-        autocmd FileType make set noexpandtab
+        autocmd FileType make setlocal noexpandtab
     augroup END
     augroup cprog
         au!
-        autocmd FileType c,cpp  set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
+        autocmd FileType c,cpp  setlocal formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
     augroup END
     augroup html
         au!
-        autocmd FileType html set tabstop=2
-        autocmd FileType html set shiftwidth=2
+        autocmd FileType html setlocal tabstop=2
+        autocmd FileType html setlocal shiftwidth=2
     augroup END
     augroup autoquickfix
         autocmd!

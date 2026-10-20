@@ -23,5 +23,7 @@ set -o NO_PROMPT_CR
 alias ls="ls -F"
 alias cd..="cd .."
 
+path=($path ~/.local/bin)
+
 eval "$(starship init zsh)"
 

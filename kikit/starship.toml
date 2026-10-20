@@ -1,0 +1,32 @@
+format = "$hostname$username$directory$git_branch$character"
+right_format = "$time"
+add_newline = false
+
+[username]
+show_always = true
+format = '[:$user\]](purple) '
+
+[hostname]
+ssh_only = false
+format = '[\[$hostname:](purple)'
+
+[directory]
+style = "green"
+truncation_length = 2
+# fish_style_pwd_dir_length = 1
+truncation_symbol = '...'
+truncate_to_repo = false
+
+[character]
+success_symbol = "[%](purple)"
+error_symbol = "[%](red)"
+vimcmd_symbol = "[%](red)"
+
+[git_branch]
+format = "[<$branch>]($style)"
+style = "bright-black"
+
+[time]
+disabled = false
+format = '[$time](purple)'
+time_format = '%a %e %H:%M'
